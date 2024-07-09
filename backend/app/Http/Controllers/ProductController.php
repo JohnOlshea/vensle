@@ -20,7 +20,8 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = Product::paginate(10); // Adjust the number based on your needs
+            $products = Product::paginate(config('constants.PAGINATION_LIMIT'));
+            //$products = Product::get();
             return response()->json($products);
         } catch (\Exception $e) {
             Log::error('Error fetching products: ' . $e->getMessage());
@@ -62,10 +63,21 @@ class ProductController extends Controller
 	    //Attach specifications: adds new entries to the pivot table
             $product->specifications()->attach($request->specification_ids);
 
-            return response()->json($product, 201);
+	    return response()->json($product, 201);
+	} catch (ValidationException $e) {
+		return response()->json(['errors' => $e->errors()], 422);
         } catch (\Exception $e) {
             Log::error('Error storing product: ' . $e->getMessage());
-            return response()->json(['error' => 'Internal Server Error'], 500);
+	    
+	    /**
+	     * return response()->json(['error' => 'Internal Server Error'], 500);
+	     * TODO: create error handling middleware
+	     * ($e instanceof \Illuminate\Database\QueryException) {
+	     * return response()->json(['error' => 'Database error: ' . $e->getMessage()], 500);
+	     * }
+	     */
+
+	    return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -75,7 +87,7 @@ class ProductController extends Controller
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show(string $id)
+    public function show(Product $product)
     {
         try {
             return response()->json($product);
@@ -101,7 +113,7 @@ class ProductController extends Controller
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\JsonResponse
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Product $product)
     {
         try {
             $validatedData = $request->validate([
@@ -120,13 +132,14 @@ class ProductController extends Controller
             $product->update($validatedData);
             $product->categories()->sync($request->category_ids);
 
-    	    // Sync specifications: update the pivot table for specifications
+    	    //Sync specifications: update the pivot table for specifications
             $product->specifications()->sync($request->specification_ids);
 
             return response()->json($product);
         } catch (\Exception $e) {
             Log::error('Error updating product: ' . $e->getMessage());
-            return response()->json(['error' => 'Internal Server Error'], 500);
+
+	    return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -136,7 +149,7 @@ class ProductController extends Controller
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy(string $id)
+    public function destroy(Product $product)
     {
         try {
             $product->delete();
