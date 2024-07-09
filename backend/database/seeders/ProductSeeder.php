@@ -22,33 +22,38 @@ class ProductSeeder extends Seeder
 
         $product1 = Product::create([
             'name' => 'Sample Laptop',
+	    'category_id' => $categoryElectronics->id,
             'condition' => 'New',
             'price' => 999.99,
             'address' => '123 Main St',
             'phone_number' => '+1234567890',
             'description' => 'A high-end laptop with amazing features.',
             'type' => 'Laptop',
+            'ratings' => 4.5,
+            'quantity' => 10,
+            'sold' => 2,
+            'views' => 50,
             'status' => 'Active',
         ]);
-	$product1->categories()->attach($categoryElectronics->id);
 
         $product2 = Product::create([
             'name' => 'Sample Smart Fridge',
+	    'category_id' => $categoryElectronics->id,
             'condition' => 'New',
             'price' => 1499.99,
             'address' => '456 Oak St',
             'phone_number' => '+9876543210',
             'description' => 'A smart fridge that makes your life easier.',
-            'type' => 'Appliance',
+	    'type' => 'Appliance',
+            'ratings' => 3.8,
+            'quantity' => 5,
+            'sold' => 1,
+            'views' => 30,	    
             'status' => 'Active',
 	]);
-	$product2->categories()->attach($categoryHome->id);
 
 	//Attach specifications to products
 	$product1->specifications()->attach($specificationTouchscreen->id);
 	$product2->specifications()->attach($specificationWireless->id);
-	
-	//Product::find(1)->specifications()->attach($specificationTouchscreen->id);
-        //Product::find(2)->specifications()->attach($specificationWireless->id);
     }
 }

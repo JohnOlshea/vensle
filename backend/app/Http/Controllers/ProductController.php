@@ -20,8 +20,10 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = Product::paginate(config('constants.PAGINATION_LIMIT'));
-            //$products = Product::get();
+            //$products = Product::paginate(config('constants.PAGINATION_LIMIT'));
+	    $products = Product::orderBy('created_at', 'desc')
+		    ->paginate(config('constants.PAGINATION_LIMIT'));
+
             return response()->json($products);
         } catch (\Exception $e) {
             Log::error('Error fetching products: ' . $e->getMessage());
@@ -53,12 +55,16 @@ class ProductController extends Controller
                 'description' => 'required|string',
                 'type' => 'required|string',
                 'status' => 'required|in:Active,Inactive',
-                'category_ids' => 'required|array',
+		'ratings' => 'nullable|numeric|min:0|max:5',
+                'quantity' => 'nullable|integer|min:0',
+                'sold' => 'nullable|integer|min:0',
+                'views' => 'nullable|integer|min:0',
+                'category_id' => 'required|exists:categories,id',
                 'specification_ids' => 'required|array',
             ]);
 
-            $product = Product::create($validatedData);
-	    $product->categories()->attach($request->category_ids);
+	    $product = Product::create($validatedData);
+	    $product->category()->associate($request->category_id)->save();
 
 	    //Attach specifications: adds new entries to the pivot table
             $product->specifications()->attach($request->specification_ids);
@@ -125,12 +131,18 @@ class ProductController extends Controller
                 'description' => 'required|string',
                 'type' => 'required|string',
                 'status' => 'required|in:Active,Inactive',
-                'category_ids' => 'required|array',
+		'ratings' => 'nullable|numeric|min:0|max:5',
+                'quantity' => 'nullable|integer|min:0',
+                'sold' => 'nullable|integer|min:0',
+                'views' => 'nullable|integer|min:0',
+                'category_id' => 'required|exists:categories,id',
                 'specification_ids' => 'required|array',
             ]);
 
             $product->update($validatedData);
-            $product->categories()->sync($request->category_ids);
+	    
+	    // Update category for product
+            $product->category()->associate($request->category_id)->save();
 
     	    //Sync specifications: update the pivot table for specifications
             $product->specifications()->sync($request->specification_ids);
@@ -141,6 +153,78 @@ class ProductController extends Controller
 
 	    return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Get the top products based on a specific column.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string  $column
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function getTopProducts(Request $request, $column)
+    {
+        try {
+            $request->validate([
+                'per_page' => 'required|integer',
+            ]);
+
+            $perPage = $request->input('per_page');
+
+            $products = Product::orderByDesc($column)->paginate($perPage);
+
+            return response()->json($products);
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            // Log the exception and return an error response
+            Log::error("Error fetching top products by $column: " . $e->getMessage());
+            return response()->json(['error' => 'Internal Server Error'], 500);
+        }
+    }
+
+    /**
+     * Get the top products sorted by quantity.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTopProductsByQuantity(Request $request)
+    {
+        return $this->getTopProducts($request, 'quantity');
+    }
+
+    /**
+     * Get the top products sorted by sold quantity.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTopProductsBySold(Request $request)
+    {
+        return $this->getTopProducts($request, 'sold');
+    }
+
+    /**
+     * Get the top products sorted by ratings.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTopProductsByRatings(Request $request)
+    {
+        return $this->getTopProducts($request, 'ratings');
+    }
+
+    /**
+     * Get the top products sorted by views.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTopProductsByViews(Request $request)
+    {
+        return $this->getTopProducts($request, 'views');
     }
 
     /**
