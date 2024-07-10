@@ -2,6 +2,7 @@ import React from "react";
 
 // Admin Imports
 import UserDashboard from "views/admin/userdashboard";
+import AdminDashboard from "views/admin/admindashboard";
 import NFTMarketplace from "views/admin/marketplace";
 import Profile from "views/admin/profile";
 import DataTables from "views/admin/tables";
@@ -27,6 +28,13 @@ const routes = [
     path: "default",
     icon: <MdHome className="h-6 w-6" />,
     component: <UserDashboard />,
+  },
+  {
+    name: "Admin Dashboard",
+    layout: "/admin",
+    path: "admin-dashboard",
+    icon: <MdOutlineBallot className="h-6 w-6" />,
+    component: <AdminDashboard />,
   },
   {
     name: "Messages",
