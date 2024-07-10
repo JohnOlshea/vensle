@@ -6,6 +6,7 @@ import NFTMarketplace from "views/admin/marketplace";
 import Profile from "views/admin/profile";
 import DataTables from "views/admin/tables";
 import RTLDefault from "views/rtl/default";
+import Chats from "views/admin/chats";
 
 // Auth Imports
 import SignIn from "views/auth/SignIn";
@@ -26,6 +27,13 @@ const routes = [
     path: "default",
     icon: <MdHome className="h-6 w-6" />,
     component: <UserDashboard />,
+  },
+  {
+    name: "Messages",
+    layout: "/admin",
+    path: "messages",
+    icon: <MdRateReview className="h-6 w-6" />,
+    component: <Chats />,
   },
   {
     name: "NFT Marketplace",
