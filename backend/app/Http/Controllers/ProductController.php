@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Class ProductController
@@ -21,13 +23,14 @@ class ProductController extends Controller
     {
         try {
             //$products = Product::paginate(config('constants.PAGINATION_LIMIT'));
-	    $products = Product::orderBy('created_at', 'desc')
+	    $products = Product::with('images')
+		    ->orderBy('created_at', 'desc')
 		    ->paginate(config('constants.PAGINATION_LIMIT'));
 
             return response()->json($products);
         } catch (\Exception $e) {
             Log::error('Error fetching products: ' . $e->getMessage());
-            return response()->json(['error' => 'Internal Server Error'], 500);
+	    return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -45,6 +48,8 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+	$response = [];
+
         try {
             $validatedData = $request->validate([
                 'name' => 'required|string',
@@ -60,46 +65,88 @@ class ProductController extends Controller
                 'sold' => 'nullable|integer|min:0',
                 'views' => 'nullable|integer|min:0',
                 'category_id' => 'required|exists:categories,id',
-		'specification_ids' => 'required|array',
+		//'specification_ids' => 'required|array',
+		'images' => 'required',
+		'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
 	    ]);
 
-
 	    $product = Product::create($validatedData);
+/**
+	    if($request->hasFile('images'))
+	    {
 
-/**	    
-// Handle image uploads
-foreach ($request->images as $imageFile) {
-    $imageName = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-    $extension = $imageFile->getClientOriginalExtension();
-    
-    $image = new Image([
-	'name' => $imageName,
-	'extension' => $extension,
-    ]);
 
-    // Upload the image to the "uploads" folder
-    $imagePath = $imageFile->storeAs('uploads', $imageName . '.' . $extension, 'public');
+    		    $images = $request->file('images');
+		    foreach($images as $image)
+		    {
+			    $extension = $image->getClientOriginalExtension();
+			    //TODO
+			    $filename = Str::random(32).".".$extension;
+			    $image->move('uploads/', $filename);
 
-    // Set the product_id for the image
-    $image->product_id = $product->id;
-    $image->path = $imagePath;
+			    Image::create([
+			    	'name' => $filename,
+				'extension' => $extension,
+				'product_id' => $product->id,
+			    ]);
+		    }
+	    }
 
-    $product->images()->save($image);
+ */
 
-    // Check if this image is the designated display image
-    if ($request->images[$key]['is_display_image']) {
-	$product->update(['display_image_id' => $image->id]);
-    }
-}
-*/
+	    
+	// Handle image uploads
+	
+	$foundProfileImage = false;
+	foreach ($request->images as $imageFile) {
+	    $extension = $imageFile->getClientOriginalExtension();	
+	    $imageName =  Str::random(32).".".$extension;
+	    $extension = $imageFile->getClientOriginalExtension();
+	    
+	    $image = new Image([
+		'name' => $imageName,
+		'extension' => $extension,
+	    ]);
+
+	    // Upload the image to the "uploads" folder
+	    //$imagePath = $imageFile->storeAs('uploads', $imageName . '.' . $extension, 'public');
+	    $imageFile->move('uploads/', $imageName);
+
+	    // Set the product_id for the image
+	    $image->product_id = $product->id;
+
+	    $product->images()->save($image);
+
+	    if (!$foundProfileImage)
+	    {
+	    	$product->update(['display_image_id' => $image->id]);
+		$foundProfileImage = true;
+	    }
+	    // Check if this image is the designated display image
+	    //if ($request->images[$key]['is_display_image']) {
+		//$product->update(['display_image_id' => $image->id]);
+	    //}
+	}
+
 //TODO
 //$product->category()->associate($request->category_id)->save();
+//
+//
+//
+//if ($validator->fails())
+//{
+    //return response()->json(["status"=>"failed", "message"=>"validate error", "errors" => $validator->errors()]);
+//}
 
 	    //Attach specifications: adds new entries to the pivot table
-            if (isset($validatedData['specifications'])) {
-            	//$product->specifications()->attach($request->specification_ids);
-                $product->specifications()->attach($validatedData['specifications']);
-            }	    
+            //if (isset($validatedData['specifications'])) {
+            	// //$product->specifications()->attach($request->specification_ids);
+		    
+		//$product->specifications()->attach($validatedData['specifications']);
+            //}	    
+//status: success
+//count - ckeckimgcont
+//message: Success: Image(s) uploaded
 
 	    return response()->json($product, 201);
 	} catch (ValidationException $e) {
@@ -119,20 +166,45 @@ foreach ($request->images as $imageFile) {
         }
     }
 
+    public function upload(Request $request)
+    {
+
+    }
+
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Product  $product
+     * @param  \App\Models\int  $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show(Product $product)
+    public function show(string $id)
     {
         try {
-            return response()->json($product);
+	    $product = Product::with('images')->findOrFail($id);
         } catch (\Exception $e) {
             Log::error('Error fetching product: ' . $e->getMessage());
             return response()->json(['error' => 'Internal Server Error'], 500);
-        }
+	}
+        //} catch (ModelNotFoundException $e) {
+            //return response()->json(['error' => 'Product not found.'], 404);
+	//}
+	
+	$similarProducts = $this->getSimilarProducts($product);	
+	return response()->json([
+		'product' => $product,
+		'similarProducts' => $similarProducts
+	]);
+    }
+
+    private function getSimilarProducts($product)
+    {
+        $similarProducts = Product::where('category_id', $product->category_id)
+            ->where('name', 'like', '%' . $product->name . '%')
+            ->where('id', '<>', $product->id)
+            ->take(4)
+            ->get();
+
+        return $similarProducts;
     }
 
     /**
@@ -148,44 +220,83 @@ foreach ($request->images as $imageFile) {
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Product  $product
+     * @param  int  $productId
      * @return \Illuminate\Http\JsonResponse
      */
-    public function update(Request $request, Product $product)
+    public function update(Request $request, int $productId)
     {
-        try {
-            $validatedData = $request->validate([
-                'name' => 'required|string',
-                'condition' => 'required|in:New,Fairly Used,N/A',
-                'price' => 'required|numeric',
-                'address' => 'required|string',
-                'phone_number' => 'required|string',
-                'description' => 'required|string',
-                'type' => 'required|string',
-                'status' => 'required|in:Active,Inactive',
-		'ratings' => 'nullable|numeric|min:0|max:5',
-                'quantity' => 'nullable|integer|min:0',
-                'sold' => 'nullable|integer|min:0',
-                'views' => 'nullable|integer|min:0',
-                'category_id' => 'required|exists:categories,id',
-                'specification_ids' => 'required|array',
-	    ]);
+	    try {
+		$validatedData = $request->validate([
+		    'name' => 'sometimes|required|string',
+		    'condition' => 'sometimes|required|in:New,Fairly Used,N/A',
+		    'price' => 'sometimes|required|numeric',
+		    'address' => 'sometimes|required|string',
+		    'phone_number' => 'sometimes|required|string',
+		    'description' => 'sometimes|required|string',
+		    'type' => 'sometimes|required|string',
+		    'status' => 'sometimes|required|in:Active,Inactive',
+		    'ratings' => 'sometimes|nullable|numeric|min:0|max:5',
+		    'quantity' => 'sometimes|nullable|integer|min:0',
+		    'sold' => 'sometimes|nullable|integer|min:0',
+		    'views' => 'sometimes|nullable|integer|min:0',
+		    'category_id' => 'sometimes|required|exists:categories,id',
+		    'specification_ids' => 'sometimes|required|array',
+		    'images' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',	
+		]);
 
-            $product->update($validatedData);
-	    
-	    // Update category for product
-            $product->category()->associate($request->category_id)->save();
+		$product = Product::findOrFail($productId);
 
-    	    //Sync specifications: update the pivot table for specifications
-            $product->specifications()->sync($request->specification_ids);
+		// Check if a new image is provided
+		if ($request->hasFile('images')) {
+		    // Handle file upload for the new image
+		    $extension = $request->file('images')->getClientOriginalExtension();
+		    $imageName = Str::random(32) . "." . $extension;
+		    $request->file('image')->move('uploads/', $imageName);
 
-            return response()->json($product);
-        } catch (\Exception $e) {
-            Log::error('Error updating product: ' . $e->getMessage());
+		    // Delete the existing image if it exists
+		    if ($product->images()->exists()) {
+			$existingImage = $product->images->first();
+			Storage::delete('uploads/' . $existingImage->name);
+			$existingImage->delete();
+		    }
 
-	    return response()->json(['error' => $e->getMessage()], 500);
-        }
+		    // Create a new image record in the database
+		    $image = new Image([
+			'name' => $imageName,
+			'extension' => $extension,
+		    ]);
+
+		    $product->images()->save($image);
+		}
+
+		// Update other product details
+		$product->update($validatedData);
+
+		// Update category for product
+		$product->category()->associate($request->category_id)->save();
+
+		return response()->json($product);
+	    } catch (\Exception $e) {
+		Log::error('Error updating product: ' . $e->getMessage());
+
+		return response()->json(['error' => $e->getMessage()], 500);
+	    }	    
     }
+
+    /** For Test only */
+public function filter(Request $request)
+{
+    $searchInput = $request->input('searchTerm');
+    $categoryId = $request->input('category_id');
+
+    $products = Product::when($searchInput, function ($query) use ($searchInput) {
+        $query->where('name', 'like', "%$searchInput%");
+    })->when($categoryId, function ($query) use ($categoryId) {
+        $query->where('category_id', $categoryId);
+    })->get();
+
+    return response()->json(['data' => $products]);
+}
 
     /**
      * Get the top products based on a specific column.
