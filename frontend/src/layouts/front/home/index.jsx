@@ -12,6 +12,8 @@ import FirstBanner from "components/front/firstBanner/FirstBanner";
 import SecondBanner from "components/front/secondBanner/SecondBanner";
 import UploadsRatings from "components/front/uploadsRatings/UploadsRatings";
 import NewTopRequests from "components/front/topRequests/NewTopRequests";
+import MoreToLove from "components/front/moreToLove/MoreToLove";
+
 import Subscribe from "components/front/subscribe/Subscribe";
 
 import Footer from "components/front/footer/Footer";
@@ -36,6 +38,7 @@ const Home = () => {
       <UploadsRatings />
       <SecondBanner />
       {activePill === 1 && <NewTopRequests />}
+      <MoreToLove />
       <Subscribe />
       <Footer />
 
