@@ -46,8 +46,6 @@ const Subscribe = () => {
                   autoComplete="email"
                   required
                   placeholder="Email Address"
-                  //value={resetFormData.email}
-                  //onChange={handleResetInputChange}
                   style={{ background: "#9e9e9e", background: "transparent" }}
                   className="block w-full rounded-md border-2 px-4 py-3.5 text-white placeholder:text-white sm:text-sm sm:leading-5"
                 />
