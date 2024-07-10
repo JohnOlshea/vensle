@@ -1,11 +1,15 @@
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   HeartIcon,
 } from '@heroicons/react/24/outline'
 
 import NavCategories from "./NavCategories";
 
-const NavLinks = () => {
+const NavLinks = ({ storedCountryFlag, handleGetUserCountry }) => {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+
 
   return (
     <div
@@ -21,19 +25,21 @@ const NavLinks = () => {
           </li>
 
           <li className="flex items-center text-xs lg:hidden">
+            {storedCountryFlag && (
               <img
                 className="mr-2 h-4 w-4 rounded-full"
-                src=""
+                src={storedCountryFlag}
                 alt="country flg"
               />
-            Nigeria
+            )}
+            {handleGetUserCountry()}
           </li>
               <li className="hidden hover:underline font-medium px-4 lg:flex border-r cursor-pointer border-r-black border-l border-l-black items-center">
 		    <HeartIcon className="h-5 w-5 mr-1" />
 	  	    <p>Saved</p>
               </li>
 
-              <li
+          <li
 	    	className="hidden font-medium hover:underline rounded-sm lg:block "
 	      >
                 <Link className="px-2" to="">
