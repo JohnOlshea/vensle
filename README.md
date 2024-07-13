@@ -9,7 +9,9 @@ Vensle is a location-based classified site and grocery ecommerce platform that e
 
 Visit the [Deployed Site](https://nominet.vensle.com/)
 
-Visit the [Landing page](http://home.vensle.com/)
+[Landing page](http://home.vensle.com/)
+
+[Figma prototype](https://www.figma.com/proto/QVoxMNkcQW8mB2HbNdXv5s/Vensle?node-id=913-182100&scaling=scale-down-width&page-id=908%3A181102&starting-point-node-id=913%3A182847&content-scaling=fixed&hide-ui=1)
 
 Read the [Final Project Blog Article](https://olshea.hashnode.dev/building-vensle-a-location-based-marketplace)
 
