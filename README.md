@@ -13,10 +13,6 @@ Visit the [Deployed Site](https://nominet.vensle.com/)
 
 [Figma prototype](https://www.figma.com/proto/QVoxMNkcQW8mB2HbNdXv5s/Vensle?node-id=913-182100&scaling=scale-down-width&page-id=908%3A181102&starting-point-node-id=913%3A182847&content-scaling=fixed&hide-ui=1)
 
-Read the [Final Project Blog Article](https://olshea.hashnode.dev/building-vensle-a-location-based-marketplace)
-
-Connect with the [Author on LinkedIn](https://www.linkedin.com/in/john-akala-4b42075a/)
-
 ## Installation
 
 To get started with Vensle locally, follow these steps:
@@ -63,10 +59,6 @@ We welcome contributions to Vensle! To contribute:
 - [Stripe](https://stripe.com/) - Payment processing for ecommerce
 - [React](https://reactjs.org/) - JavaScript library for building user interfaces
 - [Laravel](https://laravel.com/) - PHP framework for web artisans
-
-## Licensing
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
 ---
 
