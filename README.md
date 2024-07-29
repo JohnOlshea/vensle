@@ -70,12 +70,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ---
 
-## Advanced: The Story Behind Vensle
-
-### Inspiration and Technical Challenges
-
-Vensle started from a personal need to bridge the gap between traditional classifieds and modern ecommerce, inspired by the complexities and limitations faced by local sellers and buyers. As the sole developer behind this project, I embarked on a journey to create a platform that not only facilitates transactions but also fosters local community connections.
-
 ### Technical Depth
 
 #### Real-Time Messaging with Pusher
@@ -97,13 +91,3 @@ Through Vensle, I've deepened my understanding of full-stack development, master
 ### Conclusion
 
 Vensle represents not just a technical achievement but a testament to my passion for empowering local economies through technology. By combining innovative solutions with a user-first approach, I aim to continue evolving Vensle into a platform that transforms how communities buy and sell goods online.
-
----
-
-### About the Author
-
-John Akala is a passionate software engineer dedicated to creating impactful solutions that empower communities. With a background in both frontend and backend development, John thrives on tackling complex challenges and delivering intuitive user experiences.
-
-- [GitHub](https://github.com/JohnOlshea/vensle)
-- [LinkedIn](https://www.linkedin.com/in/john-akala-4b42075a/)
-- [Project Landing Page](https://home.vensle.com/)
